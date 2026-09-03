@@ -1,5 +1,7 @@
+mod core;
+
 use axum::{Json, Router};
-use axum::routing::{get, post, Route};
+use axum::routing::{get, post};
 use serde::{Deserialize, Serialize};
 #[tokio::main]
 async fn main() {
