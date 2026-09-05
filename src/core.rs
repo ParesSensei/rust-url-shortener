@@ -1,6 +1,7 @@
 use std::collections::HashMap;
-use axum::extract::State;
+use axum::extract::{Path, State};
 use axum::Json;
+use axum::response::Redirect;
 use rand::thread_rng;
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
@@ -44,19 +45,35 @@ pub struct UrlPayload {
     url: String,
 }
 
-pub async fn get_url() -> String {
-    "shortcode ...".to_string()
+#[derive(Serialize)]
+pub struct ShortCodeResponse {
+    short_code: String,
+}
+
+pub async fn get_url(
+    Path(short_code): Path<String>,
+    State(state): State<AppState>
+) -> Redirect {
+    let data = state.data.lock().await;
+
+    let url = data.get(&short_code).unwrap();
+
+    //url.to_string()
+    Redirect::temporary(url)
 }
 
 pub async fn post_url(
     State(state): State<AppState>,
     Json(payload): Json<UrlPayload>,
-) -> Json<UrlPayload> {
-    // let paylod = UrlPayload{
-    //     url: "https://docs.rs/tokio/latest/tokio/".to_string()
-    // };
+) -> Json<ShortCodeResponse> {
     let mut data = state.data.lock().await;
-    let mut rng = thread_rng();
+    let new_url = shortcode();
+    data.insert(new_url.clone(), payload.url);
 
-    Json(payload)
+    Json(ShortCodeResponse{
+        short_code: new_url
+    })
 }
+
+
+//     url: "https://docs.rs/tokio/latest/tokio/"
