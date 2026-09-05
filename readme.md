@@ -106,8 +106,8 @@ The HashMap is shared between handlers using Arc and Mutex.
 The core URL shortening and redirect functionality is implemented.
 
 ## Planned Improvements
-- Handle non-existent short codes without unwrap()
-- Validate submitted URLs
+- Handle non-existent short codes without unwrap() ✅
+- Validate submitted URLs ✅
 - Handle short-code collisions
 - Add more automated tests
 - Add persistent database storage

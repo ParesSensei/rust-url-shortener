@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 use axum::extract::{Path, State};
+use axum::http::StatusCode;
 use axum::Json;
 use axum::response::Redirect;
 use rand::thread_rng;
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
+use url::Url;
 use crate::{AppState};
 
 #[test]
@@ -53,26 +55,41 @@ pub struct ShortCodeResponse {
 pub async fn get_url(
     Path(short_code): Path<String>,
     State(state): State<AppState>
-) -> Redirect {
+) -> Result<Redirect, StatusCode> {
     let data = state.data.lock().await;
 
-    let url = data.get(&short_code).unwrap();
-
-    //url.to_string()
-    Redirect::temporary(url)
+    let url = match data.get(&short_code) {
+        Some(url) => Ok(Redirect::permanent(url)),
+        None => Err(StatusCode::NOT_FOUND),
+    };
+    url
 }
 
 pub async fn post_url(
     State(state): State<AppState>,
     Json(payload): Json<UrlPayload>,
-) -> Json<ShortCodeResponse> {
-    let mut data = state.data.lock().await;
-    let new_url = shortcode();
-    data.insert(new_url.clone(), payload.url);
+) -> Result<Json<ShortCodeResponse>, StatusCode> {
 
-    Json(ShortCodeResponse{
-        short_code: new_url
-    })
+    let input_url = payload.url.clone();
+    let result = Url::parse(&input_url);
+    match result {
+        Ok(url) => {
+            if url.scheme() == "https" || url.scheme() == "http" {
+                // valid
+                let mut data = state.data.lock().await;
+                let new_url = shortcode();
+                data.insert(new_url.clone(), payload.url);
+
+                Ok(Json(ShortCodeResponse{
+                    short_code: new_url
+                }))
+            }
+            else {
+                Err(StatusCode::BAD_REQUEST)
+            }
+        }
+        Err(_) => {Err(StatusCode::BAD_REQUEST)}
+    }
 }
 
 
