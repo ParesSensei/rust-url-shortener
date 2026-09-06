@@ -108,8 +108,8 @@ The core URL shortening and redirect functionality is implemented.
 ## Planned Improvements
 - Handle non-existent short codes without unwrap() ✅
 - Validate submitted URLs ✅
-- Handle short-code collisions
-- Add more automated tests
+- Handle short-code collisions ✅
+- Add more automated tests ✅
 - Add persistent database storage
 - Add a web UI
 - Deploy the application

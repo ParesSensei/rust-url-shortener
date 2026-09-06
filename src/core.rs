@@ -1,21 +1,20 @@
-use std::collections::HashMap;
+use crate::AppState;
+use axum::Json;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
-use axum::Json;
 use axum::response::Redirect;
-use rand::thread_rng;
 use rand::seq::SliceRandom;
+use rand::thread_rng;
 use serde::{Deserialize, Serialize};
 use url::Url;
-use crate::{AppState};
 
 #[test]
 pub fn generate_short_code() {
     // let mut pair = HashMap::<String, String>::new();
 
-    let choices1 = [0,1,2,3,4,5,6,7,8,9];
-    let choices2 = ['a','b','c','d','e','f'];
-    let choices3 = ['A','B','C','D','E','F'];
+    let choices1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    let choices2 = ['a', 'b', 'c', 'd', 'e', 'f'];
+    let choices3 = ['A', 'B', 'C', 'D', 'E', 'F'];
 
     let mut rng = thread_rng();
     println!("choices: {:?}", choices1.choose(&mut rng));
@@ -23,16 +22,17 @@ pub fn generate_short_code() {
     println!("choices: {:?}", choices3.choose(&mut rng));
 }
 
-
 fn shortcode() -> String {
     let mut short_code = String::new();
-    let choices: Vec<char> = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().collect();
+    let choices: Vec<char> = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        .chars()
+        .collect();
     let mut rng = thread_rng();
-    for _ in 0..8{
+    for _ in 0..8 {
         // println!("choices = {}", choices.clone().choose(&mut rng).unwrap());
         let code = choices.choose(&mut rng).unwrap();
         short_code.push(*code);
-    };
+    }
     println!("short_code = {}", &short_code);
 
     // let user_data = "https://docs.rs/tokio/latest/tokio/".to_string();
@@ -54,7 +54,7 @@ pub struct ShortCodeResponse {
 
 pub async fn get_url(
     Path(short_code): Path<String>,
-    State(state): State<AppState>
+    State(state): State<AppState>,
 ) -> Result<Redirect, StatusCode> {
     let data = state.data.lock().await;
 
@@ -69,7 +69,6 @@ pub async fn post_url(
     State(state): State<AppState>,
     Json(payload): Json<UrlPayload>,
 ) -> Result<Json<ShortCodeResponse>, StatusCode> {
-
     let input_url = payload.url.clone();
     let result = Url::parse(&input_url);
     match result {
@@ -77,20 +76,39 @@ pub async fn post_url(
             if url.scheme() == "https" || url.scheme() == "http" {
                 // valid
                 let mut data = state.data.lock().await;
-                let new_url = shortcode();
+                let mut new_url = shortcode();
+                while data.contains_key(&new_url) {
+                    new_url = shortcode()
+                }
                 data.insert(new_url.clone(), payload.url);
 
-                Ok(Json(ShortCodeResponse{
-                    short_code: new_url
+                Ok(Json(ShortCodeResponse {
+                    short_code: new_url,
                 }))
-            }
-            else {
+            } else {
                 Err(StatusCode::BAD_REQUEST)
             }
         }
-        Err(_) => {Err(StatusCode::BAD_REQUEST)}
+        Err(_) => Err(StatusCode::BAD_REQUEST),
     }
 }
 
-
 //     url: "https://docs.rs/tokio/latest/tokio/"
+
+// testing shortcode
+
+#[test]
+fn test_shortcode() {
+    let shortcode = shortcode();
+    assert_eq!(shortcode.len(), 8 );
+}
+
+#[test]
+fn test_shortcode_characters() {
+    let shortcode = shortcode();
+    let choices = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    for c in shortcode.chars() {
+        assert!(choices.contains(c));
+    }
+}
