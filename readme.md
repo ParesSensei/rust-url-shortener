@@ -1,37 +1,70 @@
 # Rust URL Shortener
 
-A simple URL shortener API built with Rust and Axum.
+A simple URL shortener API built with Rust, Axum, SQLx, and PostgreSQL.
 
 This project generates a random 8-character short code for a given URL,
-stores the mapping in memory, and redirects requests using the generated
+stores the mapping in PostgreSQL, and redirects requests using the generated
 short code.
 
 ## Features
 
 - Generate random 8-character short codes
 - Shorten URLs through a JSON API
-- In-memory URL storage using `HashMap`
-- Shared application state using `Arc<Mutex<_>>`
+- URL validation for HTTP/HTTPS URLs
+- PostgreSQL persistent storage
+- Short-code uniqueness enforced by database constraint
 - Redirect to the original URL
-- Basic random short-code testing
+- Automated tests for short-code generation
 
 ## Tech Stack
 
 - **Rust**
 - **Axum** — HTTP web framework
 - **Tokio** — asynchronous runtime
+- **SQLx** — async SQL toolkit
+- **PostgreSQL** — persistent database storage
 - **Serde** — JSON serialization and deserialization
 - **Rand** — random short-code generation
-- **HashMap** — in-memory URL storage
-- **Arc + Mutex** — shared mutable application state
+- **URL** — URL parsing and validation
 
 ## How It Works
 
-The application stores URLs using the following mapping:
-
+The application stores URL mappings in PostgreSQL:
 ```text
 short_code → original_url
 ```
+
+## Setup
+
+### Prerequisites
+
+- Rust
+- PostgreSQL
+- SQLx CLI
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+DATABASE_URL=postgres://postgres:PASSWORD@localhost:5432/url_shortener
+```
+
+### Database Migration
+Run the migrations:
+```bash
+sqlx migrate run
+```
+Run
+```bash
+cargo run
+```
+The server will start at:
+```text
+http://127.0.0.1:8080
+```
+
+
 For example:  
 NYLBWgPu → https://docs.rs/tokio/latest/tokio/
 
@@ -77,13 +110,13 @@ Content-Type: application/json
 Response:
 ```json
 {
-  "short_code": "NYLBWgPu"
+  "short_code": "v2iywVAR"
 }
 ```
 
 2. Use the short code
 ```text
-GET http://127.0.0.1:8080/get_url/NYLBWgPu
+GET http://127.0.0.1:8080/get_url/v2iywVAR
 ```
 The server redirects to:
 ```text
@@ -92,13 +125,19 @@ https://docs.rs/tokio/latest/tokio/
 
 ## Storage
 
-The application currently uses an in-memory HashMap:
+The application uses PostgreSQL for persistent URL storage.
 
-short_code → original_url
+SQLx migrations are used to manage the database schema.
 
-The HashMap is shared between handlers using Arc and Mutex.
+The `urls` table contains:
 
-> Note: Data is lost when the application restarts.
+- `id` — primary key
+- `short_code` — unique 8-character identifier
+- `original_url` — original destination URL
+
+Data persists across application restarts.
+
+> Old version : Data is lost when the application restarts.
 
 
 # Current Status
