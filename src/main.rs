@@ -3,20 +3,27 @@ mod core;
 use crate::core::{get_url, post_url};
 use axum::routing::{get, post};
 use axum::Router;
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::Mutex;
+use sqlx::PgPool;
 
 #[derive(Clone)]
 struct AppState {
-    data: Arc<Mutex<HashMap<String, String>>>,
+    // data: Arc<Mutex<HashMap<String, String>>>,
+    pool: PgPool,
 }
 
 #[tokio::main]
 async fn main() {
+    dotenvy::dotenv().ok();
+    let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+
+    let pool = sqlx::postgres::PgPool::connect(&db_url)
+        .await
+        .expect("Failed to create postgre database pool");
+
     let state = AppState {
-        data: Arc::new(Mutex::new(HashMap::new())),
+        pool,
     };
+
     let app = Router::new()
         .route("/", get(|| async { "URL Shortener is running!" }))
         .route("/post_url", post(post_url))

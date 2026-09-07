@@ -56,11 +56,16 @@ pub async fn get_url(
     Path(short_code): Path<String>,
     State(state): State<AppState>,
 ) -> Result<Redirect, StatusCode> {
-    let data = state.data.lock().await;
+    // let data = state.data.lock().await;
 
-    let url = match data.get(&short_code) {
-        Some(url) => Ok(Redirect::permanent(url)),
-        None => Err(StatusCode::NOT_FOUND),
+    let result = sqlx::query!("SELECT * FROM urls WHERE short_code = $1", short_code)
+        .fetch_one(&state.pool)
+        .await;
+
+    let url = match result {
+        Ok(row) => Ok(Redirect::permanent(&row.original_url)),
+        Err(sqlx::Error::RowNotFound) => Err(StatusCode::NOT_FOUND),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
     };
     url
 }
@@ -75,13 +80,20 @@ pub async fn post_url(
         Ok(url) => {
             if url.scheme() == "https" || url.scheme() == "http" {
                 // valid
-                let mut data = state.data.lock().await;
-                let mut new_url = shortcode();
-                while data.contains_key(&new_url) {
-                    new_url = shortcode()
-                }
-                data.insert(new_url.clone(), payload.url);
+                // let mut data = state.data.lock().await;
+                let new_url = shortcode();
 
+                let data = sqlx::query!("INSERT INTO urls (short_code, original_url)
+                    VALUES ($1, $2)"
+                    ,new_url, payload.url)
+                    .execute(&state.pool)
+                    .await;
+
+                println!("{:?}", data);
+                match data {
+                    Ok(_) => {},
+                    Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+                }
                 Ok(Json(ShortCodeResponse {
                     short_code: new_url,
                 }))

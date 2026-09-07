@@ -110,6 +110,6 @@ The core URL shortening and redirect functionality is implemented.
 - Validate submitted URLs ✅
 - Handle short-code collisions ✅
 - Add more automated tests ✅
-- Add persistent database storage
+- Add persistent database storage✅
 - Add a web UI
 - Deploy the application
