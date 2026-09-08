@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rust URL Shortener</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<main class="container">
+    <section class="card">
+        <h1>Rust URL Shortener</h1>
+
+        <p class="description">
+            Turn long URLs into short, simple links.
+        </p>
+
+        <form id="urlForm">
+            <label for="inputUser">Enter your URL</label>
+
+            <input
+                    type="url"
+                    id="inputUser"
+                    name="url"
+                    placeholder="https://example.com"
+                    required
+            >
+
+            <button type="submit">Shorten URL</button>
+        </form>
+
+        <section class="result-section">
+            <h2>Result</h2>
+            <p id="result">Your shortened URL will appear here.</p>
+        </section>
+    </section>
+</main>
+</body>
+</html>
