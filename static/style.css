@@ -83,7 +83,20 @@ button:hover {
     font-size: 18px;
 }
 
+
 #result {
-    color: #52525b;
-    word-break: break-word;
+    display: block;
+    margin-top: 10px;
+    padding: 12px 14px;
+
+    border: 1px solid #d4d4d8;
+    border-radius: 6px;
+
+    color: #18181b;
+    text-decoration: none;
+    word-break: break-all;
+}
+
+#result:hover {
+    background: #f4f4f5;
 }

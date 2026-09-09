@@ -150,5 +150,5 @@ The core URL shortening and redirect functionality is implemented.
 - Handle short-code collisions ✅
 - Add more automated tests ✅
 - Add persistent database storage✅
-- Add a web UI
+- Add a web UI ✅
 - Deploy the application

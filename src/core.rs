@@ -7,6 +7,7 @@ use rand::seq::SliceRandom;
 use rand::thread_rng;
 use serde::{Deserialize, Serialize};
 use url::Url;
+use axum::extract::Form;
 
 #[test]
 pub fn generate_short_code() {
@@ -72,7 +73,7 @@ pub async fn get_url(
 
 pub async fn post_url(
     State(state): State<AppState>,
-    Json(payload): Json<UrlPayload>,
+    Form(payload): Form<UrlPayload>,
 ) -> Result<Json<ShortCodeResponse>, StatusCode> {
     let input_url = payload.url.clone();
     let result = Url::parse(&input_url);
