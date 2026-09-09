@@ -8,7 +8,6 @@ use tower_http::services::ServeDir;
 
 #[derive(Clone)]
 struct AppState {
-    // data: Arc<Mutex<HashMap<String, String>>>,
     pool: PgPool,
 }
 
